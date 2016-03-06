@@ -8,13 +8,13 @@ var Nodespace = function () {
 	this.modules = {};
 };
 
-Nodespace.prototype.registerModules = function (root, callback) {
-	this.resolve(root, callback);
+Nodespace.prototype.registerModules = function (root, require, callback) {
+	this.resolve(root, require, callback);
 };
 
-Nodespace.prototype.resolve = function (path, callback) {
+Nodespace.prototype.resolve = function (path, require, callback) {
 	var that = this;
-	resolveDir(path, that.modules, callback);
+	resolveDir(path, that.modules, require, callback);
 };
 
 Nodespace.prototype.where = function (predicate, callback) {
@@ -52,18 +52,18 @@ var whereAsync = function (node, predicate, result, callback) {
 	}
 };
 
-var resolveDir = function (dirPath, root, callback) {
+var resolveDir = function (dirPath, root, require, callback) {
 	fs.readdir(dirPath, function (err, fileNames) {
 		var tasks = async.reduce(fileNames, root,
 			function (node, fileName, callback) {
-			resolveFile(dirPath, fileName, node, function (err, node) {
+			resolveFile(dirPath, fileName, node, require, function (err, node) {
 				callback(err, node);
 			});
 		}, function (err, node) { callback(err, node); });
 	});
 };
 
-var resolveFile = function (dirPath, fileName, root, callback) {
+var resolveFile = function (dirPath, fileName, root, require, callback) {
 	filePath = dirPath + '/' + fileName;
 	fs.lstat(filePath, function (err, stat) {
 		if (stat.isFile() && path.extname(fileName) == '.js') {
@@ -73,7 +73,7 @@ var resolveFile = function (dirPath, fileName, root, callback) {
 			callback(err, root);
 		} else if (stat.isDirectory()) {
 			root[fileName] = {};
-			resolveDir(filePath, root[fileName], callback);
+			resolveDir(filePath, root[fileName], require, callback);
 		} else {
 			callback(err, root);
 		}
