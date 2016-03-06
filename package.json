@@ -1,0 +1,24 @@
+{
+  "name": "nodespace",
+  "version": "1.0.0",
+  "description": "Library able to load and expose node modules through nodespaces (namespaces).",
+  "main": "nodespace.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rivarol89/nodespace.git"
+  },
+  "keywords": [
+    "namespace",
+    "node",
+    "module"
+  ],
+  "author": "Florent Tollin de Rivarol",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rivarol89/nodespace/issues"
+  },
+  "homepage": "https://github.com/rivarol89/nodespace#readme"
+}
