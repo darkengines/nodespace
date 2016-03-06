@@ -1,6 +1,6 @@
 {
   "name": "nodespace",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Library able to load and expose node modules through nodespaces (namespaces).",
   "main": "nodespace.js",
   "scripts": {
