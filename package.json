@@ -10,6 +10,9 @@
     "type": "git",
     "url": "git+https://github.com/rivarol89/nodespace.git"
   },
+  "dependencies": {
+    "async": "^1.5.2"
+  },
   "keywords": [
     "namespace",
     "node",

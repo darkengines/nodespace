@@ -6,12 +6,13 @@ var graph = require('./graph.js');
 var modules = [];
 
 var Nodespace = function () {
-
+	this.nodespace = {};
+	this.exports = {};
 };
 
 Nodespace.prototype.initialize = function (path, require, callback) {
 	var that = this;
-	resolveDir(path, path, require, function (err) {
+	resolveDir(path, path, require, that.exports, function (err, exports) {
 		if (err) throw err;
 		initialize.call(that, function () { 
 			callback(that)
@@ -35,48 +36,46 @@ var initialize = function (callback) {
 		return names.indexOf(from.nodespace.name) >= 0;
 	});
 	var sortedModules = modulesGraph.topologicalSort();
-	var tasks = sortedModules.map(function (module) {
-		return function (callback) {
-			var name = module.name;
-			var names = name.split('.');
-			var nodespace = that;
-			var index = 0;
-			var lastNameIndex = names.length - 1;
-			while (index < lastNameIndex) {
-				var currentName = names[index];
-				if (!nodespace[currentName]) nodespace[currentName] = {};
-				nodespace = nodespace[currentName];
-				index++;
-			}
-			nodespace[names[index]] = module;
-			if (module.initialize) {
-				module.initialize.call(module, that, callback);
-			} else {
-				callback();
-			}
-		};
-	});
-	async.series(tasks, callback);
+	async.eachSeries(sortedModules, function (module, callback) {
+		var name = module.name;
+		var names = name.split('.');
+		var nodespace = that.nodespace;
+		var index = 0;
+		var lastNameIndex = names.length - 1;
+		while (index < lastNameIndex) {
+			var currentName = names[index];
+			if (!nodespace[currentName]) nodespace[currentName] = {};
+			nodespace = nodespace[currentName];
+			index++;
+		}
+		nodespace[names[index]] = module;
+		if (module.initialize) {
+			module.initialize.call(module, that.nodespace, that.exports, callback);
+		} else {
+			callback();
+		}
+	}, callback);
 };
 
-var resolveDir = function (dirPath, rootDir, require, callback) {
+var resolveDir = function (dirPath, rootDir, require, exports, callback) {
 	fs.readdir(dirPath, function (err, fileNames) {
 		async.each(fileNames, function (fileName, callback) {
-			resolveFile(dirPath, rootDir, fileName, require, callback);
+			resolveFile(dirPath, rootDir, fileName, require, exports, callback);
 		}, callback);
 	});
 };
 
-var resolveFile = function (dirPath, rootDir, fileName, require, callback) {
+var resolveFile = function (dirPath, rootDir, fileName, require, exports, callback) {
 	var filePath = dirPath+'/'+fileName;
 	fs.lstat(filePath, function (err, stat) {
 		if (stat.isDirectory()) {
-			resolveDir(filePath, rootDir, require, callback);
+			if (!exports[fileName]) exports[fileName] = {};
+			resolveDir(filePath, rootDir, require, exports[fileName], callback);
 		} else {
 			if (stat.isFile()) {
 				if (path.extname(fileName) == '.js') {
 					var name = fileName.substr(0, fileName.lastIndexOf('.js'));
-					require(filePath);
+					exports[name] = require(filePath);
 				}
 			}
 			callback(err);
